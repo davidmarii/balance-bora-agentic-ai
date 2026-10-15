@@ -2,9 +2,9 @@
 import math
 import sqlite3
 from pathlib import Path
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
-mcp = FastMCP("Balance Bora Formulation Assessment")
+mcp = MCPServer("Balance Bora Formulation Assessment")
 
 DB_FILE = Path(
     r"C:\Users\Admin\Downloads\Balance_Bora_Feed.db"

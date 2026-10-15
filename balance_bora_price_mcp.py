@@ -4,9 +4,9 @@ from pathlib import Path
 from datetime import date, datetime
 
 from openpyxl import load_workbook
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
-mcp = FastMCP("Balance Bora Price Server")
+mcp = MCPServer("Balance Bora Price Server")
 
 PRICE_FILE = Path(
     os.environ.get(

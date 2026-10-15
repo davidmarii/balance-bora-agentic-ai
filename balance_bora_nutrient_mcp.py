@@ -2,9 +2,9 @@
 import os
 import sqlite3
 from pathlib import Path
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
-mcp = FastMCP("Balance Bora Nutrient Server")
+mcp = MCPServer("Balance Bora Nutrient Server")
 
 DB_FILE = Path(
     os.environ.get(
