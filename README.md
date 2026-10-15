@@ -1,98 +1,312 @@
-# Balance Bora — Agentic AI for Livestock Feed Advisory
+# Balance Bora Agentic AI
 
-**Track:** Agriculture  
-**Project:** Climate-resilient livestock feed optimization and advisory for smallholder farmers in Kenya.
+**An AI-powered livestock feed advisory prototype for climate-resilient livestock production in Kenya.**
 
-## Overview
+[![Live API](https://img.shields.io/badge/API-Deployed%20on%20Render-blue)](https://balance-bora-agentic-ai.onrender.com/)
+[![API Docs](https://img.shields.io/badge/API%20Docs-Swagger-green)](https://balance-bora-agentic-ai.onrender.com/docs)
+[![Python](https://img.shields.io/badge/Python-3.x-blue)](https://www.python.org/)
 
-Balance Bora is an early-stage agricultural advisory project designed to help smallholder livestock farmers make better-informed feed decisions using locally available ingredients, nutrient information, and market prices.
+## 1. Problem Statement
 
-This repository contains a local agent prototype that connects an AI model to specialized tools through the **Model Context Protocol (MCP)**.
+Smallholder livestock farmers in Kenya face high feed costs, inconsistent access to quality feed ingredients, limited access to reliable nutrient-composition information, and difficulty formulating affordable, balanced rations using locally available resources.
 
-The prototype demonstrates how an AI agent can retrieve feed information, check price records, assess the completeness of formulation inputs, and prepare an advisory draft for human review.
+Poor feed decisions can reduce livestock productivity and profitability. Farmers and extension officers need accessible tools that bring together feed composition, ingredient prices, and livestock requirements to support better feeding decisions.
 
-## MCP integration
+## 2. Solution Overview
 
-The agent connects to three MCP tool servers:
+Balance Bora is developing an AI-powered feed advisory agent that connects livestock nutrition information, feed-price data, and livestock assessment tools.
 
-1. **Nutrient lookup** — retrieves recorded nutrient information for feed ingredients.
-2. **Price lookup** — searches the local price workbook and filters out test-only price records.
-3. **Input assessment** — checks the availability and completeness of information supplied for a feed advisory.
+The intended workflow is to help users:
 
-The agent uses the locally hosted `qwen2.5:3b` model through Ollama.
+- Describe their livestock, production level, and feeding objectives.
+- Identify locally available feed ingredients.
+- Retrieve relevant nutrient-composition information.
+- Consult available ingredient-price information.
+- Assess feeding options and receive understandable guidance.
+- Review recommendations before using them in livestock production.
 
-## Human-in-the-loop safeguards
+The long-term goal is to make livestock nutrition advice more accessible through farmer-friendly channels, including WhatsApp and other mobile-based interfaces.
 
-The agent prepares a draft rather than automatically issuing a final feeding recommendation or placing an order.
+**Current status:** The API is deployed on Render. The public service currently exposes the API home page, health endpoint, and interactive documentation. Full AI-agent and MCP-tool integration in the hosted deployment remains under development and must be verified before the service is presented as a fully operational advisory agent.
 
-The user can:
+## 3. Target Users
 
-- Review the draft.
-- Enter `APPROVE-DRAFT` to record approval of that exact draft.
-- Enter `REJECT-DRAFT` to reject it.
-- Press Enter to leave the draft pending.
+- **Smallholder livestock farmers:** seeking affordable feeding options and practical livestock nutrition guidance.
+- **Livestock extension officers:** supporting farmers with feeding and management decisions.
+- **Animal nutritionists and researchers:** assessing feed composition and livestock feeding requirements.
+- **Farmer cooperatives and producer organizations:** supporting members with feed planning and access to feed information.
+- **Feed suppliers:** potentially supporting more transparent access to ingredient prices and availability.
 
-Recording approval does not send a message, place an order, or replace professional nutritional review.
+## 4. System Architecture
 
-## Architecture
+The intended architecture separates the user-facing API, agent reasoning, specialist tools, and underlying data.
 
-Farmer or operator request  
-→ Local AI agent  
-→ MCP tool servers  
-→ Nutrient database, price workbook, and input assessment  
-→ Draft advisory  
-→ Human review and explicit approval
+```text
+Farmer / Extension Officer
+            |
+            v
+      FastAPI Interface
+            |
+            v
+     PydanticAI Agent
+            |
+            v
+      MCP Client Layer
+       /      |       \
+      v       v        v
+ Nutrient   Price   Livestock
+  Server   Server   Assessment
+      \       |        /
+       v      v       v
+   Feed Data / Price Data
+            |
+            v
+   Advisory Response
+            |
+            v
+     Human Review
+```
 
-## Current status
+This diagram describes the **intended integrated workflow**. The deployed API does not yet have all MCP servers connected at runtime.
 
-This is an experimental local prototype, not a validated commercial feed formulation system.
+## 5. Technology Stack
 
-- The agent and MCP tools run locally.
-- Ollama must be installed and the model downloaded.
-- The nutrient database and price workbook must be available and correctly configured.
-- Nutrient units, analytical basis, data provenance, ingredient suitability, and current supplier prices require verification.
-- The prototype should not be treated as proof that a ration meets an animal's nutritional requirements.
-- The local CLI is not a publicly hosted agent demo.
+| Technology | Purpose |
+|---|---|
+| Python | Application and agent implementation |
+| FastAPI | HTTP API and application endpoints |
+| Uvicorn | ASGI server |
+| PydanticAI | Agent orchestration and model integration |
+| OpenAI-compatible model interface | Connects the agent to a compatible language model provider |
+| Ollama / Qwen | Local model configuration used during development |
+| Model Context Protocol (MCP) | Interface between the agent and specialist tools |
+| SQLite | Local structured feed-data storage |
+| OpenPyXL | Reading spreadsheet-based feed-price data |
+| Render | Public API hosting |
+| GitHub | Source-code version control |
 
-## Repository contents
+The exact model provider and MCP configuration depend on the execution environment. A local Ollama endpoint is not automatically accessible from a cloud-hosted service.
 
-- `balance_bora_agent.py` — AI agent and human-review workflow.
-- `balance_bora_nutrient_mcp.py` — nutrient lookup MCP server.
-- `balance_bora_price_mcp.py` — feed price lookup MCP server.
-- `balance_bora_assessment_mcp.py` — formulation-input assessment MCP server.
-- `test_balance_bora_prices.py` — price lookup test.
-- `Balance_Bora_Feed_Price_Template.xlsx` — price workbook template, subject to review before publication.
+## 6. Agent Architecture
 
-## Running locally
+The agent is designed to coordinate specialist tools rather than relying solely on free-form language generation.
 
-Requirements include Python, Ollama, and the Python dependencies required by the agent and MCP servers.
+The intended processing sequence is:
 
-1. Install Ollama and download the model:
+1. Receive a livestock-feeding question.
+2. Interpret the user's request and identify relevant information.
+3. Call appropriate specialist tools when available.
+4. Use returned nutrient, price, or livestock-assessment information to inform the response.
+5. Explain the resulting advice and identify missing information or assumptions.
+6. Return the response for human review.
 
-   ```bash
-   ollama pull qwen2.5:3b
-   ```
+The agent uses PydanticAI and an OpenAI-compatible model interface. Tool availability depends on successful MCP server initialization and model configuration.
 
-2. Install the project dependencies in separate environments as required by the agent and MCP servers.
-3. Configure the local nutrient database and feed price workbook.
-4. Start the agent using the project's configured Python environment:
+## 7. MCP Implementation
 
-   ```bash
-   python balance_bora_agent.py
-   ```
+The project uses the Model Context Protocol (MCP) to separate specialist functionality from the main agent.
 
-Exact dependency installation commands and database setup should be documented alongside the relevant source files before the project is considered reproducible.
+Each specialist server exposes tools that the agent can access through an MCP client. During local development, the servers communicate with the client through standard input/output (stdio).
 
-## Demo
+The current codebase contains three specialist server modules:
 
-Existing Balance Bora website: https://davidmarii.github.io/Balance_Bora_website/
+- `balance_bora_nutrient_mcp.py`
+- `balance_bora_price_mcp.py`
+- `balance_bora_assessment_mcp.py`
 
-The website is a separate project and should not be assumed to demonstrate this repository's MCP workflow unless that integration is explicitly deployed and tested.
+The hosted deployment currently starts the FastAPI application without initializing these MCP servers. Therefore, the complete MCP workflow is **not yet operational on the public Render service**.
 
-## Responsible use
+## 8. MCP Tools and Servers
 
-This prototype is intended for research and demonstration. It does not replace a qualified animal nutritionist, laboratory analysis, verified supplier quotations, or farm-specific assessment.
+### Nutrient server
 
-## License
+**File:** `balance_bora_nutrient_mcp.py`
 
-A license has not yet been selected. Reuse and redistribution permissions should be clarified before the project is presented as open source.
+Designed to access feed nutrient-composition information stored in the local SQLite database, `Balance_Bora_Feed.db`.
+
+### Price server
+
+**File:** `balance_bora_price_mcp.py`
+
+Designed to retrieve ingredient-price information from the feed-price workbook, `Balance_Bora_Feed_Price_Template.xlsx`.
+
+Price information must be checked for completeness, freshness, and verification status. Example or placeholder prices must not be represented as current market prices.
+
+### Livestock assessment server
+
+**File:** `balance_bora_assessment_mcp.py`
+
+Designed to support livestock-related assessment tasks that inform feeding advice.
+
+The availability and outputs of each tool should be verified through integration tests before the full agent is used for practical feeding decisions.
+
+## 9. Setup and Installation
+
+### Prerequisites
+
+- Python 3.x
+- Git
+- A compatible language-model provider
+- The project data files required by the nutrient and price servers
+
+Clone the repository:
+
+```bash
+git clone https://github.com/davidmarii/balance-bora-agentic-ai.git
+cd balance-bora-agentic-ai
+```
+
+Create and activate a virtual environment.
+
+**Windows PowerShell:**
+
+```powershell
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+**Linux or macOS:**
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+The dependency versions and MCP server environment must be made compatible before starting the complete integrated agent. The current cloud deployment workaround does not activate the MCP servers.
+
+### Model configuration
+
+Configure the environment variables expected by `balance_bora_agent.py` for your chosen OpenAI-compatible provider:
+
+```text
+BALANCE_BORA_MODEL=<provider-supported-model>
+OPENAI_BASE_URL=<provider-api-base-url>
+OPENAI_API_KEY=<provider-api-key>
+```
+
+Use the actual values supplied by your provider. Keep API keys private and never commit secrets to GitHub.
+
+For local Ollama development, ensure the model is installed and the Ollama service is running. A cloud-hosted Render service needs a model endpoint that is reachable from Render.
+
+## 10. Usage Instructions
+
+### Start the deployed API
+
+Open:
+
+- API home: https://balance-bora-agentic-ai.onrender.com/
+- Health check: https://balance-bora-agentic-ai.onrender.com/health
+- Interactive documentation: https://balance-bora-agentic-ai.onrender.com/docs
+
+The home endpoint returns the API name, status, documentation path, and health path.
+
+The health endpoint is intended to confirm that the web application is responding. It does not verify that the model or MCP tools are operational.
+
+### Start locally
+
+After dependencies and model configuration are compatible:
+
+```bash
+uvicorn app:app --host 127.0.0.1 --port 8000
+```
+
+Visit `http://127.0.0.1:8000/docs` to inspect the API.
+
+### Chat endpoint
+
+The API defines a `POST /chat` endpoint that accepts a message. A representative request is:
+
+```json
+{
+  "message": "I have a dairy cow producing 20 litres of milk per day. What information is needed to formulate an affordable balanced ration using locally available feeds?"
+}
+```
+
+The endpoint's successful response and full advisory behavior must be tested after model and MCP integration is restored. The example illustrates the intended use; it is not a claim that the current hosted service already produces a verified ration.
+
+## 11. Human-in-the-Loop Workflow
+
+Human oversight is important because livestock feeding recommendations can affect animal health, production, and farm finances.
+
+The intended workflow includes:
+
+1. The farmer or extension officer supplies livestock and feeding information.
+2. The agent retrieves relevant information from available tools.
+3. The agent prepares an advisory response, including assumptions and missing information where appropriate.
+4. A farmer, extension officer, or qualified animal nutritionist reviews the advice.
+5. The user confirms or adjusts the information before applying a feeding recommendation.
+6. Feedback and observed livestock performance can be used to improve the system.
+
+The prototype should not be treated as a replacement for professional animal-nutrition assessment or appropriate feed testing.
+
+## 12. Limitations
+
+- The public Render API is deployed, but the complete MCP tool workflow is not yet connected in the hosted application.
+- A responding health endpoint does not demonstrate successful AI inference or correct feed formulation.
+- Local Ollama configuration cannot be assumed to work from a cloud deployment.
+- Feed composition varies by ingredient quality, processing method, location, and other factors.
+- Ingredient prices can become outdated and require verification.
+- Nutrient data and livestock requirements need appropriate validation for the intended species and production stages.
+- The prototype has not been established as a validated commercial ration-formulation system.
+- Recommendations should be reviewed by a qualified person before being applied to livestock.
+
+## 13. Future Improvements
+
+Planned development priorities include:
+
+1. **Complete MCP integration:** make the nutrient, price, and assessment servers compatible with the deployed agent environment.
+2. **Hosted model integration:** configure and test a reliable cloud-accessible model endpoint.
+3. **Ration formulation:** integrate and validate least-cost optimization against relevant livestock nutrient requirements and ingredient constraints.
+4. **Data engineering:** improve feed-data quality, provenance, versioning, and validation.
+5. **Price verification:** establish workflows for updating ingredient prices and distinguishing verified prices from placeholders.
+6. **Testing and evaluation:** add unit, integration, safety, and livestock-nutrition validation tests.
+7. **Farmer-facing interface:** connect the agent to a WhatsApp-based workflow and explore SMS access for feature-phone users.
+8. **Offline and low-connectivity support:** make the system more accessible in rural areas with limited internet connectivity.
+9. **Human feedback:** capture farmer and extension-officer feedback to improve usability and advisory quality.
+10. **Monitoring and security:** improve logging, error handling, access control, and deployment monitoring.
+
+## 14. Project Structure
+
+```text
+balance-bora-agentic-ai/
+├── app.py
+├── balance_bora_agent.py
+├── balance_bora_nutrient_mcp.py
+├── balance_bora_price_mcp.py
+├── balance_bora_assessment_mcp.py
+├── Balance_Bora_Feed.db
+├── Balance_Bora_Feed_Price_Template.xlsx
+├── requirements.txt
+├── Procfile
+└── README.md
+```
+
+The files listed above describe the expected project structure; individual local or deployment environments may contain additional configuration files.
+
+## 15. Contributing
+
+Contributions that improve data quality, livestock-nutrition validation, MCP reliability, security, and farmer usability are welcome.
+
+Before submitting changes:
+
+- Do not commit API keys, secrets, local virtual environments, or audit logs.
+- Test changes locally where possible.
+- Document any changes to model configuration, MCP tools, or data schemas.
+- Clearly distinguish tested functionality from planned functionality.
+
+## 16. Project Links
+
+- **Source code:** https://github.com/davidmarii/balance-bora-agentic-ai
+- **Deployed API:** https://balance-bora-agentic-ai.onrender.com/
+- **Interactive API documentation:** https://balance-bora-agentic-ai.onrender.com/docs
+- **Balance Bora website:** https://davidmarii.github.io/Balance_Bora_website/
+
+---
+
+**Project status:** Early-stage prototype. The API is publicly deployed; full AI-agent and MCP integration, testing, and validation remain active development priorities.
