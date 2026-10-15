@@ -20,3 +20,13 @@ audit_log.jsonl
 .idea/
 .DS_Store
 Thumbs.db
+__pycache__/
+.venv/
+.agent-venv/
+audit_log.jsonl
+.env
+*.pyc
+
+# Legacy MCP environment and local-only dependencies
+.mcp-legacy/
+requirements-local.txt

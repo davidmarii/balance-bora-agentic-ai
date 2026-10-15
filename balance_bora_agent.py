@@ -15,16 +15,22 @@ BASE_DIR = Path(__file__).resolve().parent
 AUDIT_FILE = BASE_DIR / "audit_log.jsonl"
 
 # Ollama exposes a local OpenAI-compatible endpoint.
+MODEL_NAME = os.environ.get("BALANCE_BORA_MODEL", "qwen2.5:3b")
+MODEL_BASE_URL = os.environ.get(
+    "OPENAI_BASE_URL", "http://localhost:11434/v1"
+)
+MODEL_API_KEY = os.environ.get("OPENAI_API_KEY", "ollama")
+
 model = OpenAIChatModel(
-    "qwen2.5:3b",
+    MODEL_NAME,
     provider=OpenAIProvider(
-        base_url="http://localhost:11434/v1",
-        api_key="ollama",
+        base_url=MODEL_BASE_URL,
+        api_key=MODEL_API_KEY,
     ),
 )
 
 
-SERVER_PYTHON = BASE_DIR / ".venv" / "Scripts" / "python.exe"
+SERVER_PYTHON = Path(__file__).resolve().parent / ".mcp-legacy" / "Scripts" / "python.exe"
 
 nutrient_server = MCPToolset(
     StdioTransport(

@@ -9,7 +9,7 @@ mcp = FastMCP("Balance Bora Nutrient Server")
 DB_FILE = Path(
     os.environ.get(
         "BALANCE_BORA_DB",
-        r"C:\Users\Admin\Downloads\Balance_Bora_Feed.db"
+        str(Path(__file__).with_name("Balance_Bora_Feed.db"))
     )
 )
 
