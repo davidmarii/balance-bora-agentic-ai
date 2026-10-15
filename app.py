@@ -13,12 +13,7 @@ from balance_bora_agent import (
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    async with AsyncExitStack() as stack:
-        await stack.enter_async_context(nutrient_server)
-        await stack.enter_async_context(price_server)
-        await stack.enter_async_context(assessment_server)
-        yield
-
+    yield
 
 app = FastAPI(
     title="Balance Bora Agent API",
