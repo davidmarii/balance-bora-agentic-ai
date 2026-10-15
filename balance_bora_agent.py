@@ -30,7 +30,7 @@ model = OpenAIChatModel(
 )
 
 
-SERVER_PYTHON = Path(__file__).resolve().parent / ".mcp-legacy" / "Scripts" / "python.exe"
+SERVER_PYTHON = Path(__import__("sys").executable)
 
 nutrient_server = MCPToolset(
     StdioTransport(
